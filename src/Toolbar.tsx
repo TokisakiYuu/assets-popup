@@ -1,178 +1,345 @@
-import React, { FC, useContext, useEffect, useState } from 'react'
-import { Button, Input, Modal, Upload, Form, Dropdown, Menu, Switch, Select, Slider } from 'antd'
+import React, { FC, PropsWithChildren, useEffect, useState } from 'react'
+import { Button, Input, Modal, Upload, Form, Dropdown, Menu, Switch, Select, Slider, Spin, message, Space } from 'antd'
 import { RcFile } from 'antd/lib/upload'
-import { CloudUploadOutlined, UploadOutlined, DownOutlined } from '@ant-design/icons'
 import { useList, useSetState } from 'react-use'
 import { css } from '@emotion/css'
-import Context from './context'
+import { useCtx } from './context'
+import { GroupSource } from './GroupList'
+import { useGetQiNiuToken, useAddMaterial, useDownloadFile, useGetCompressionConfig } from './lib/hooks'
+import hasha from 'hasha'
+import imageCompression from 'browser-image-compression'
+const qiniu = require('qiniu-js')
 
 const { Item } = Form
 
-const Toolbar: FC = () => {
-  const { onSearch } = useContext(Context)
-  const [state, setState] = useSetState({
-    localUploadModalVisible: false,
-    internetUploadModalVisible: false
-  })
+interface Props {
+  group: GroupSource | null
+}
 
-  const handleMenuClick = (event: any) => {
-    switch(event.key) {
-      case 'local':
-        return setState({ localUploadModalVisible: true })
-      case 'internet':
-        return setState({ internetUploadModalVisible: true })
-    }
+const Toolbar: FC<Props> = ({ group }) => {
+  const ctx = useCtx()
+  const [state, setState] = useSetState({
+    localUploadModalVisible: false
+  })
+  const [localUploadState, setLocalUploadState] = useSetState({
+    uploading: false,
+    message: ''
+  })
+  const qiniuToken = useGetQiNiuToken()
+  const addMaterial = useAddMaterial()
+  const config = useGetCompressionConfig([state.localUploadModalVisible])
+
+  const uploadFile = async (file: File) => {
+    const buffer = await file.arrayBuffer()
+    const fileHash = hasha(Buffer.from(buffer), { algorithm: 'md5' })
+    const fileUploadHash = hasha(fileHash + Math.random() + Date.now(), { algorithm: 'md5' })
+    return new Promise((resolve, reject) => {
+      const filename = `${config.prefix}/${fileUploadHash}-${file.name}`
+      const observable = qiniu.upload(
+        file,
+        filename,
+        qiniuToken,
+        { fname: file.name, mimeType: file.type },
+        { upprotocol: 'https:' }
+      )
+      observable.subscribe(
+        null,
+        reject,
+        resolve
+      )
+    });
   }
 
-  const menu = (
-    <Menu onClick={handleMenuClick}>
-      <Menu.Item key="local" icon={<UploadOutlined />}>
-        本地上传
-      </Menu.Item>
-      <Menu.Item key="internet" icon={<CloudUploadOutlined />}>
-        网络链接
-      </Menu.Item>
-    </Menu>
-  );
+  const compressImage = async (file: File, ratio: number) => {
+    // https://www.npmjs.com/package/browser-image-compression
+    if (!(['image/png', 'image/jpeg'].includes(file.type))) return file
+    return await imageCompression(file, {
+      maxSizeMB: file.size * (ratio / 100) / 1024 / 1024
+    })
+  }
+
+  // 本地文件上传
+  const handleLocalUpload = async (data: LocalUploadFormData) => {
+    setLocalUploadState({ uploading: true })
+    const { enableImageCompress, compressionRatio } = data
+    // 压缩
+    if (enableImageCompress && compressionRatio) {
+      setLocalUploadState({ message: '正在压缩图片' })
+      data.files = await Promise.all(data.files.map(async file => {
+        if (['image/png', 'image/jpeg'].includes(file.type)) {
+          return await compressImage(file, compressionRatio)
+        }
+        return file
+      }))
+    }
+    await sleep(500)
+    // 上传到七牛云
+    setLocalUploadState({ message: '正在上传' })
+    const uploadResults: any[] = []
+    for (const file of data.files) {
+      setLocalUploadState({ message: `正在上传"${file.name}"` })
+      uploadResults.push({
+        file,
+        res: await uploadFile(file)
+      })
+    }
+    await sleep(500)
+    // 添加素材
+    setLocalUploadState({ message: '正在添加到你的素材库' })
+    await sleep(500)
+    const res = await addMaterial({
+      fileList: uploadResults.map(item => ({
+        fileKey: item.res.key,
+        fileName: item.file.name
+      })),
+      materialGroupNo: group?.groupNo,
+      materialType: data.materialType
+    })
+    if (res.data.code === 10000) {
+      message.success('添加成功')
+      ctx.refreshFileList()
+      ctx.refreshGroupList()
+      setState({ localUploadModalVisible: false })
+    } else {
+      message.error(res.data.msg)
+    }
+    setLocalUploadState({ uploading: false })
+  }
 
   return (
     <div className={style}>
-      <div className="left">
-        <Dropdown overlay={menu}>
-          <Button type="primary" onClick={() => setState({ localUploadModalVisible: true })}>
-            上传文件 <DownOutlined />
-          </Button>
-        </Dropdown>
-      </div>
-      <div className="right">
-        <Input.Search placeholder="搜索文件" allowClear onSearch={onSearch} style={{ width: 200 }} />
-      </div>
+      <Button type="primary" onClick={() => setState({ localUploadModalVisible: true })}>
+        上传文件
+      </Button>
       <LocalUploadModal
+        group={group}
         visible={state.localUploadModalVisible}
         onCancel={() => setState({ localUploadModalVisible: false })}
-        onFinish={() => {
-          console.log('上传完了');
-          // TODO 刷新列表
-        }}
+        onFinish={handleLocalUpload}
+        uploading={localUploadState.uploading}
+        message={localUploadState.message}
       />
-      <InternetUploadModal
-        visible={state.internetUploadModalVisible}
-        onCancel={() => setState({ internetUploadModalVisible: false })}
-        onFinish={() => {
-          console.log('上传完了');
-          // TODO 刷新列表
-        }}
+      <Input.Search
+        placeholder="请输入文件名"
+        allowClear
+        style={{ marginLeft: 'auto', width: 200 }}
+        onSearch={filename => ctx.searchFile(filename)}
+        onChange={value => !value && ctx.searchFile(undefined)}
       />
     </div>
   )
 }
 
+const sleep = (time: number) => new Promise(resolve => setTimeout(resolve, time))
 interface UploadModalProps {
+  group: GroupSource | null
   visible: boolean
   onCancel: () => void
-  onFinish: () => void
+  onFinish: (data: LocalUploadFormData) => void
+  uploading: boolean
+  message: string
+}
+
+interface LocalUploadFormData {
+  files: File[]
+  enableImageCompress: boolean
+  compressionRatio?: number
+  materialType: number
 }
 
 const LocalUploadModal: FC<UploadModalProps> = ({
+  group,
   visible,
   onCancel,
-  onFinish
+  onFinish,
+  uploading,
+  message
 }) => {
-  const [fileList, fileListRef] = useList<RcFile>([])
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<LocalUploadFormData>()
+  const config = useGetCompressionConfig([visible])
 
   useEffect(() => {
-    return () => {
-      if (!visible) {
-        form.resetFields()
-      }
+    if (visible) {
+      form.setFieldsValue({
+        ...config,
+        materialType: 0
+      })
     }
-  }, [visible])
+  }, [visible, config])
+
+  const handleSubmit = () => {
+    form.validateFields()
+      .then(data => {
+        onFinish(data)
+      })
+  }
+
+  const FormNode = (
+    <Form
+      form={form}
+      wrapperCol={{ span: 17 }}
+      labelCol={{ span: 7 }}
+    >
+      <Item
+        label="文件"
+        name="files"
+      >
+        <LocalFileInput />
+      </Item>
+
+      <Item
+        label="素材类型"
+        name="materialType"
+      >
+        <Select>
+          <Select.Option value={0}>通用</Select.Option>
+          <Select.Option value={1}>证件</Select.Option>
+          <Select.Option value={2}>交易数据</Select.Option>
+        </Select>
+      </Item>
+
+      <Item
+        label="为图片文件启用压缩"
+        name="enabled"
+        valuePropName="checked"
+        normalize={value => value ? 0 : 1}
+        getValueProps={value => ({ checked: value === 0 })}
+      >
+        <Switch />
+      </Item>
+
+      <Item
+        noStyle
+        shouldUpdate
+      >
+        {form => (
+          <Item
+            label="压缩至原图的"
+            name={['config', 'ratio']}
+          >
+            <Slider
+              tipFormatter={value => `${value}%`}
+              max={100}
+              min={10}
+              disabled={form.getFieldValue('enabled') === 1}
+            />
+          </Item>
+        )}
+      </Item>
+    </Form>
+  )
 
   return (
     <Modal
-      title="本地文件上传"
+      title={`上传本地文件到${group ? group.groupName : '默认分组'}`}
       visible={visible}
       onCancel={onCancel}
       maskClosable={false}
-      onOk={onFinish}
+      onOk={handleSubmit}
       okText="确认"
       cancelText="取消"
     >
-      <Form
-        form={form}
-        wrapperCol={{ span: 17 }}
-        labelCol={{ span: 7 }}
-        initialValues={{
-          enableImageCompress: false,
-          compressionRatio: 60
-        }}
-      >
-        <Item name="locationFile">
-          <Upload
-            listType="picture"
-            beforeUpload={file => {
-              fileListRef.push(file)
-              return false
-            }}
-            onRemove={file => fileListRef.filter(item => item !== file)}
-            fileList={fileList}
-          >
-            <Button type="primary">选择本地文件</Button>
-          </Upload>
-        </Item>
-
-        <Item
-          label="为图片文件启用压缩"
-          name="enableImageCompress"
-          valuePropName="checked"
-        >
-          <Switch />
-        </Item>
-
-        <Item
-          noStyle
-          shouldUpdate
-        >
-          {form => form.getFieldValue('enableImageCompress') && (
-            <Item
-              label="压缩至原图的"
-              name="compressionRatio"
-            >
-              <Slider
-                tipFormatter={value => `${value}%`}
-                max={100}
-                min={10}
-              />
-            </Item>
-          )}
-        </Item>
-      </Form>
+      {uploading
+        ? <Spin tip={message}>{FormNode}</Spin>
+        : FormNode
+      }
     </Modal>
   )
 }
 
-const InternetUploadModal: FC<UploadModalProps> = ({
-  visible,
-  onCancel,
-  onFinish
-}) => {
+interface CustomFormItemProps<V = any> {
+  value?: V
+  onChange?: (value: V) => void
+}
+
+const LocalFileInput: FC<CustomFormItemProps<RcFile[]>> = ({ value = [], onChange }) => {
+  if (!value || !onChange) return null
+  const [state, setState] = useSetState({
+    linkModalVisible: false,
+    linkListContent: '',
+    linkSourceDownloading: false
+  })
+  const downloadFile = useDownloadFile()
+
+  const handleClickLink = (e: any) => {
+    e.stopPropagation()
+    setState({ linkModalVisible: true })
+  }
+
+  const downloadSource = async () => {
+    const tasks = state.linkListContent.split('\n').map(item => ({
+      link: item,
+      successed: false
+    }))
+    const files: File[] = []
+    setState({ linkSourceDownloading: true })
+    for (const task of tasks) {
+      try {
+        const res = await downloadFile(task.link)
+        if (res.statusText === 'OK') {
+          const blob: Blob = res.data
+          const mimeType = res.headers['content-type'] || res.headers['Content-Type']
+          const filename = hasha(Buffer.from(await blob.arrayBuffer()), { algorithm: 'md5' })
+          const file = new File([blob], filename, { type: mimeType })
+          files.push(file)
+          task.successed = true
+        }
+      } catch (error) {
+        message.error(`从${task.link}`)
+      }
+      await sleep(300)
+      setState({ linkListContent: tasks.filter(task => !task.successed).map(task => task.link).join('\n') })
+    }
+    setState({ linkSourceDownloading: false })
+    setState({ linkModalVisible: false })
+    return files
+  }
+
+  const handleAddFileFromLinks = async () => {
+    const files = await downloadSource() as unknown as RcFile[]
+    const newValue = [...value]
+    newValue.push(...files)
+    onChange(newValue)
+  }
+
   return (
-    <Modal
-      title="网络文件上传"
-      visible={visible}
-      onCancel={onCancel}
-      maskClosable={false}
-      onOk={onFinish}
-      okText="确认"
-      cancelText="取消"
-    >
-      <Form>
-        <Item label="链接" name="locationFile">
-          <Input />
-        </Item>
-      </Form>
-    </Modal>
+    <div>
+      <Upload
+        listType="picture"
+        beforeUpload={file => {
+          value.push(file)
+          onChange(value)
+          return false
+        }}
+        onRemove={file => {
+          onChange(value.filter(item => item !== file))
+        }}
+        fileList={value}
+        multiple
+      >
+        <Button type="primary">选择本地文件</Button>
+        <Button style={{ marginLeft: 10 }} type="primary" onClick={handleClickLink}>链接</Button>
+      </Upload>
+      <Modal
+        title="链接"
+        visible={state.linkModalVisible}
+        maskClosable={false}
+        okText={state.linkSourceDownloading ? '正在下载' : '确认'}
+        cancelText="取消"
+        onCancel={() => setState({ linkModalVisible: false })}
+        onOk={handleAddFileFromLinks}
+        okButtonProps={{ loading: state.linkSourceDownloading }}
+      >
+        <Input.TextArea
+          rows={10}
+          placeholder="多个链接用换行隔开"
+          value={state.linkListContent}
+          onChange={event => setState({ linkListContent: event.target.value })}
+          readOnly={state.linkSourceDownloading}
+          style={{ wordBreak: 'break-all' }}
+        />
+      </Modal>
+    </div>
   )
 }
 

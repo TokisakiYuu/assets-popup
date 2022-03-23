@@ -9,7 +9,6 @@
     "sourceMap": true,
     "jsx": "react",
     "skipLibCheck": true,
-    "moduleResolution": "node",
     "rootDir": "src",
     "forceConsistentCasingInFileNames": true,
     "noImplicitReturns": true,

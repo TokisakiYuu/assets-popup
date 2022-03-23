@@ -1,8 +1,8 @@
 {
   "name": "assets-popup",
   "version": "2.0.2",
-  "author": "Jannik Buschke",
-  "description": "Dead simple declarative bindings for Formik and Ant Design.",
+  "author": "TokisakiYuu <tokisakiyuu@qq.com>",
+  "description": "素材箱",
   "displayName": "assets-popup",
   "keywords": [
     "react",

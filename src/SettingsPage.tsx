@@ -35,16 +35,23 @@ const SettingPage: FC<Props> = () => {
           <Switch />
         </Item>
         <Item
-          label="默认压缩比例"
-          name={['config', 'ratio']}
+          noStyle
+          shouldUpdate
         >
-          <Slider
-            style={{ maxWidth: 300 }}
-            tipFormatter={value => `${value}%`}
-            max={100}
-            min={10}
-            disabled={form.getFieldValue('enabled') === 1}
-          />
+          {() => (
+            <Item
+              label="默认压缩比例"
+              name={['config', 'ratio']}
+            >
+              <Slider
+                style={{ maxWidth: 300 }}
+                tipFormatter={value => `${value}%`}
+                max={100}
+                min={10}
+                disabled={form.getFieldValue('enabled') === 1}
+              />
+            </Item>
+          )}
         </Item>
         <Item>
           <Button type="primary" onClick={handleSave}>保存</Button>

@@ -165,6 +165,13 @@ const LocalUploadModal: FC<UploadModalProps> = ({
         materialType: 0
       })
     }
+    return () => {
+      if (!visible) {
+        form.setFieldsValue({
+          files: []
+        })
+      }
+    }
   }, [visible, config])
 
   const handleSubmit = () => {

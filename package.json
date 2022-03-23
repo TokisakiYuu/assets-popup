@@ -1,6 +1,6 @@
 {
   "name": "assets-popup",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "author": "TokisakiYuu <tokisakiyuu@qq.com>",
   "description": "素材箱",
   "displayName": "assets-popup",
@@ -30,7 +30,6 @@
     "build": "tsc && tsc -p tsconfig.es.json",
     "tsc": "tsc && tsc -p tsconfig.es.json",
     "watch": "tsc --watch -p tsconfig.es.json",
-    "cleanbuild": "rm -r node_modules && npm install && tsc",
     "test": "jest",
     "test:watch": "jest --watch",
     "format": "prettier --write src/**/*.* package.json"

@@ -74,6 +74,19 @@ const ImageList: FC<Props> = ({
     }
   }, [groupNo])
 
+  useEffect(() => {
+    // 如果当前页没有素材了，就向前翻页
+    if (!data) return
+    const { records, current } = data
+      if (!records.length && current > 1) {
+        loadMaterialList({
+          current: current - 1,
+          size: 12,
+          groupNo
+        })
+      }
+  }, [data])
+
   const changePage = (page: number, size: number) => {
     loadMaterialList({
       current: page,

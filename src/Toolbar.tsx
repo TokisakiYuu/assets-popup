@@ -1,5 +1,5 @@
 import React, { FC, PropsWithChildren, useEffect, useState } from 'react'
-import { Button, Input, Modal, Upload, Form, Dropdown, Menu, Switch, Select, Slider, Spin, message, Space } from 'antd'
+import { Button, Input, Modal, Upload, Form, Dropdown, Menu, Switch, Select, Slider, Spin, message } from 'antd'
 import { RcFile } from 'antd/lib/upload'
 import { useList, useSetState } from 'react-use'
 import { css } from '@emotion/css'
@@ -9,6 +9,7 @@ import { useGetQiNiuToken, useAddMaterial, useDownloadFile, useGetCompressionCon
 import hasha from 'hasha'
 import imageCompression from 'browser-image-compression'
 const qiniu = require('qiniu-js')
+import { message as antdMessage } from 'antd'
 
 const { Item } = Form
 
@@ -177,6 +178,10 @@ const LocalUploadModal: FC<UploadModalProps> = ({
   const handleSubmit = () => {
     form.validateFields()
       .then(data => {
+        if (!data.files.length) {
+          antdMessage.warn('未选择任何文件')
+          return
+        }
         onFinish(data)
       })
   }

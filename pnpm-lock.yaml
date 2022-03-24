@@ -23,6 +23,7 @@ specifiers:
   qiniu-js: ^3.4.0
   react: 17.0.1
   react-dom: 17.0.1
+  react-photo-view: ^1.0.0
   react-use: ^17.3.2
   ts-jest: 26.4.4
   tslib: 2.3.1
@@ -36,6 +37,7 @@ dependencies:
   browser-image-compression: 1.0.17
   hasha: 5.2.2
   qiniu-js: 3.4.0
+  react-photo-view: 1.0.0_react-dom@17.0.1+react@17.0.1
   react-use: 17.3.2_react-dom@17.0.1+react@17.0.1
 
 devDependencies:
@@ -4024,6 +4026,16 @@ packages:
   /react-is/17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
     dev: true
+
+  /react-photo-view/1.0.0_react-dom@17.0.1+react@17.0.1:
+    resolution: {integrity: sha512-OSy2PRYqGT4ho6vC4Tq/hDrt6Y+FPcbY2M2LXd7waxSBVXjFuuCDK20NVlgs0y+oYT38NsMIRKKyrwTBoIMIcg==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
+    dependencies:
+      react: 17.0.1
+      react-dom: 17.0.1_react@17.0.1
+    dev: false
 
   /react-universal-interface/0.6.2_react@17.0.1+tslib@2.3.1:
     resolution: {integrity: sha512-dg8yXdcQmvgR13RIlZbTRQOoUrDciFVoSBZILwjE2LFISxZZ8loVJKAkuzswl5js8BHda79bIb2b84ehU8IjXw==}

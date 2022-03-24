@@ -1,12 +1,14 @@
 import React, { FC, useEffect } from 'react'
 import { css, cx } from '@emotion/css'
-import { FileOutlined } from '@ant-design/icons'
-import { Pagination, Empty, Dropdown, Menu, Modal, Select, message } from 'antd'
+import { FileOutlined, DeleteOutlined, EyeOutlined, DownloadOutlined, NodeIndexOutlined } from '@ant-design/icons'
+import { Pagination, Empty, Dropdown, Menu, Modal, Select, message, Typography } from 'antd'
 import { useGetMaterialList, Material, useRemoveMaterial, useGetGroupList, useMoveMaterial } from './lib/hooks'
 import { useCtx } from './context'
 import { useList, useSetState } from 'react-use'
 import { GroupSource } from './GroupList'
 import { downloadFile, fileExtension } from './utils'
+import { PhotoView, PhotoProvider } from 'react-photo-view'
+import 'react-photo-view/dist/react-photo-view.css'
 
 interface Props {
   onClickItem: (item: Material) => void
@@ -116,9 +118,22 @@ const ImageList: FC<Props> = ({
 
   const renderMenu = (material: Material) => (
     <Menu onClick={(menu) => handleMenuClick(menu, material)}>
-      <Menu.Item key="delete">删除</Menu.Item>
-      <Menu.Item key="move">移动</Menu.Item>
-      <Menu.Item key="download">下载</Menu.Item>
+      <Menu.Item key="delete" icon={<DeleteOutlined />}>删除</Menu.Item>
+      <Menu.Item key="move" icon={<NodeIndexOutlined />}>移动</Menu.Item>
+      <Menu.Item key="download" icon={<DownloadOutlined />}>下载</Menu.Item>
+      {material.mimeType.startsWith('image/') && (
+        <Menu.Item key="preview" icon={<EyeOutlined />}>
+          <PhotoProvider
+            maskOpacity={0.5}
+            loadingElement={<Typography style={{ color: 'white' }}>加载中...</Typography>}
+            brokenElement={<Typography style={{ color: 'white' }}>加载失败</Typography>}
+          >
+            <PhotoView src={material.fileUrl}>
+              <div>预览</div>
+            </PhotoView>
+          </PhotoProvider>
+        </Menu.Item>
+      )}
     </Menu>
   )
 

@@ -72,6 +72,7 @@
     "browser-image-compression": "^1.0.17",
     "hasha": "^5.2.2",
     "qiniu-js": "^3.4.0",
+    "react-photo-view": "^1.0.0",
     "react-use": "^17.3.2"
   }
 }

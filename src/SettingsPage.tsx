@@ -10,7 +10,7 @@ interface Props {
 
 const SettingPage: FC<Props> = () => {
   const [form] = Form.useForm()
-  const config = useGetCompressionConfig([])
+  const config = useGetCompressionConfig()
   const saveConfig = useSaveCompressionConfig()
 
   useEffect(() => {

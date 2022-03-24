@@ -28,7 +28,7 @@ const Toolbar: FC<Props> = ({ group }) => {
   })
   const qiniuToken = useGetQiNiuToken()
   const addMaterial = useAddMaterial()
-  const config = useGetCompressionConfig([state.localUploadModalVisible])
+  const config = useGetCompressionConfig()
 
   const uploadFile = async (file: File) => {
     const buffer = await file.arrayBuffer()
@@ -157,7 +157,7 @@ const LocalUploadModal: FC<UploadModalProps> = ({
   message
 }) => {
   const [form] = Form.useForm<LocalUploadFormData>()
-  const config = useGetCompressionConfig([visible])
+  const config = useGetCompressionConfig()
 
   useEffect(() => {
     if (visible) {

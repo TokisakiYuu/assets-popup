@@ -127,7 +127,7 @@ export function useDownloadFile() {
  * 获取压缩配置
  */
 
-export function useGetCompressionConfig(deps: any[]) {
+export function useGetCompressionConfig() {
   const ai = useAxiosInstance()
   const [ config, setConfig ] = useState<any>({})
 
@@ -138,7 +138,7 @@ export function useGetCompressionConfig(deps: any[]) {
           setConfig(res.data?.info)
         }
       })
-  }, deps)
+  }, [])
 
   return config
 }

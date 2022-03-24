@@ -1,6 +1,6 @@
 import React, { FC, useEffect } from 'react'
 import { css, cx } from '@emotion/css'
-import { FileOutlined, DeleteOutlined, EyeOutlined, DownloadOutlined, NodeIndexOutlined } from '@ant-design/icons'
+import { FileOutlined, DeleteOutlined, EyeOutlined, DownloadOutlined, NodeIndexOutlined, RotateRightOutlined } from '@ant-design/icons'
 import { Pagination, Empty, Dropdown, Menu, Modal, Select, message, Typography } from 'antd'
 import { useGetMaterialList, Material, useRemoveMaterial, useGetGroupList, useMoveMaterial } from './lib/hooks'
 import { useCtx } from './context'
@@ -127,6 +127,11 @@ const ImageList: FC<Props> = ({
             maskOpacity={0.5}
             loadingElement={<Typography style={{ color: 'white' }}>加载中...</Typography>}
             brokenElement={<Typography style={{ color: 'white' }}>加载失败</Typography>}
+            toolbarRender={({ rotate, onRotate }) => (
+              <div className={rotateIconStyle}>
+                <RotateRightOutlined className="icon" onClick={() => onRotate(rotate + 90)} />
+              </div>
+            )}
           >
             <PhotoView src={material.fileUrl}>
               <div>预览</div>
@@ -188,9 +193,9 @@ const ImageList: FC<Props> = ({
             <div className={paginationStyle}>
               {data && (
                 <Pagination
-                  current={data.current}
+                  current={data.current || 1}
                   pageSize={data.size}
-                  total={data.total}
+                  total={data.total || 1}
                   size="small"
                   onChange={changePage}
                 />
@@ -230,6 +235,22 @@ const ImageList: FC<Props> = ({
     </div>
   )
 }
+
+const rotateIconStyle = css({
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  width: 44,
+  userSelect: 'none',
+  '.icon': {
+    fontSize: 20,
+    color: '#b9a1a1',
+    transition: 'color .2s linear',
+    '&:hover': {
+      color: '#fff'
+    }
+  }
+})
 
 const paginationStyle = css({
   marginTop: 10,

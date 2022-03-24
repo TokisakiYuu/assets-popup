@@ -197,6 +197,7 @@ const LocalUploadModal: FC<UploadModalProps> = ({
       <Item
         label="素材类型"
         name="materialType"
+        hidden
       >
         <Select>
           <Select.Option value={0}>通用</Select.Option>

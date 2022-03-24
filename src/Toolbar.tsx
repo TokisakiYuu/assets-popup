@@ -246,6 +246,7 @@ const LocalUploadModal: FC<UploadModalProps> = ({
       onOk={handleSubmit}
       okText="确认"
       cancelText="取消"
+      okButtonProps={{ loading: uploading }}
     >
       {uploading
         ? <Spin tip={message}>{FormNode}</Spin>

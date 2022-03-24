@@ -148,8 +148,13 @@ export function useGetCompressionConfig() {
  */
 export function useCreateGroup() {
   const ai = useAxiosInstance()
-  return async function(data: CreateGroupData) {
-    const res = await ai.post('/authority/material/saveGroup', data)
+  return async function(params: CreateGroupData) {
+    const res = await ai.post('/authority/material/saveGroup', params)
+    const { data } = res
+    if (data.code !== 10000) {
+      message.error(data.msg)
+      throw new Error(data.msg)
+    }
     return res.data?.info
   }
 }

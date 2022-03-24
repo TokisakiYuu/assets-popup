@@ -116,7 +116,7 @@ export function useDownloadFile() {
   return function(url: string) {
     return ai.get('/authority/material/download', {
       params: {
-        url: encodeURI(url)
+        url: encodeURIComponent(url)
       },
       responseType: 'blob'
     })

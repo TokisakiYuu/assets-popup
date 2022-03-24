@@ -183,7 +183,11 @@ const ImageList: FC<Props> = ({
             </div>
           </>
         )
-        : <Empty />
+        : (
+          <div className="empty">
+            <Empty description="无素材" />
+          </div>
+        )
       }
       <Modal
         visible={state.moveMaterialModalVisible}
@@ -224,6 +228,12 @@ const scrollContainer = css({
   flexGrow: 1,
   '&::-webkit-scrollbar': {
     width: 0
+  },
+  '.empty': {
+    height: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center'
   }
 })
 

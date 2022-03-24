@@ -44,7 +44,6 @@ const ManagerPage = forwardRef<AssetsPopupControll, Props>(({
 
 const mainStyle = css({
   display: 'flex',
-  height: 500,
   gap: 10
 })
 

@@ -76,7 +76,7 @@ const GroupList: FC<Props> = ({
     if (key === 'delete') {
       Modal.confirm({
         title: '删除分组',
-        content: `确定要删除分组"${group.groupName}"？`,
+        content: `确定要删除"${group.groupName}"？`,
         onOk: async () => deleteGroup({ groupNo: group.groupNo }).then(refresh)
       })
     }

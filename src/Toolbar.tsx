@@ -35,7 +35,7 @@ const Toolbar: FC<Props> = ({ group }) => {
     const fileHash = hasha(Buffer.from(buffer), { algorithm: 'md5' })
     const fileUploadHash = hasha(fileHash + Math.random() + Date.now(), { algorithm: 'md5' })
     return new Promise((resolve, reject) => {
-      const filename = `${config.prefix}/${fileUploadHash}-${file.name}`
+      const filename = `${config.prefix}/${fileUploadHash}`
       const observable = qiniu.upload(
         file,
         filename,
@@ -63,6 +63,14 @@ const Toolbar: FC<Props> = ({ group }) => {
   const handleLocalUpload = async (data: LocalUploadFormData) => {
     setLocalUploadState({ uploading: true })
     const { enableImageCompress, compressionRatio } = data
+    // 检查文件名长度
+    for (const file of data.files) {
+      if (file.name.length > 60) {
+        message.error('文件名长度不能超过60个字')
+        setLocalUploadState({ uploading: false })
+        return
+      }
+    }
     // 压缩
     if (enableImageCompress && compressionRatio) {
       setLocalUploadState({ message: '正在压缩图片' })
@@ -96,13 +104,13 @@ const Toolbar: FC<Props> = ({ group }) => {
       materialGroupNo: group?.groupNo,
       materialType: data.materialType
     })
-    if (res.data.code === 10000) {
+    if (res.code === 10000) {
       message.success('添加成功')
       ctx.refreshFileList()
       ctx.refreshGroupList()
       setState({ localUploadModalVisible: false })
     } else {
-      message.error(res.data.msg)
+      message.error(res.msg)
     }
     setLocalUploadState({ uploading: false })
   }
@@ -115,7 +123,10 @@ const Toolbar: FC<Props> = ({ group }) => {
       <LocalUploadModal
         group={group}
         visible={state.localUploadModalVisible}
-        onCancel={() => setState({ localUploadModalVisible: false })}
+        onCancel={() => {
+          setState({ localUploadModalVisible: false })
+          setLocalUploadState({ uploading: false })
+        }}
         onFinish={handleLocalUpload}
         uploading={localUploadState.uploading}
         message={localUploadState.message}

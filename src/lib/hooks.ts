@@ -61,15 +61,11 @@ export function useGetQiNiuToken() {
  * 上传素材
  */
 export function useAddMaterial() {
-  const ctrl = useTokenRequest<AddMaterialData>(undefined, { manual: true })
-  const request = (data: AddMaterialData) => {
-    return ctrl.runAsync({
-      url: '/authority/material/addMaterial',
-      method: 'POST',
-      data
-    })
+  const ai = useAxiosInstance()
+  return async function(params: AddMaterialData) {
+    const res = await ai.post('/authority/material/addMaterial', params)
+    return res.data
   }
-  return request
 }
 
 interface AddMaterialData {

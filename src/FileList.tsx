@@ -10,6 +10,9 @@ import { downloadFile, fileExtension } from './utils'
 import { PhotoView, PhotoProvider } from 'react-photo-view'
 import 'react-photo-view/dist/react-photo-view.css'
 
+const fileListPageSize = localStorage.getItem('file_list_page_size')
+const pageSize = fileListPageSize ? parseInt(fileListPageSize) : 12
+
 interface Props {
   onClickItem: (item: Material) => void
   groupNo: string,
@@ -45,7 +48,7 @@ const ImageList: FC<Props> = ({
   ctx.searchFile = (filename: string) => {
     loadMaterialList({
       current: 1,
-      size: 12,
+      size: pageSize,
       groupNo,
       materialName: filename
     })
@@ -68,7 +71,7 @@ const ImageList: FC<Props> = ({
     if (groupNo) {
       loadMaterialList({
         current: 1,
-        size: 12,
+        size: pageSize,
         groupNo
       })
     }
@@ -81,13 +84,14 @@ const ImageList: FC<Props> = ({
       if (!records.length && current > 1) {
         loadMaterialList({
           current: current - 1,
-          size: 12,
+          size: pageSize,
           groupNo
         })
       }
   }, [data])
 
   const changePage = (page: number, size: number) => {
+    localStorage.setItem('file_list_page_size', String(size))
     loadMaterialList({
       current: page,
       size,
@@ -211,6 +215,7 @@ const ImageList: FC<Props> = ({
                   total={data.total || 1}
                   size="small"
                   onChange={changePage}
+                  pageSizeOptions={['8', '12', '16', '20', '24', '28', '36', '80', '120']}
                 />
               )}
             </div>

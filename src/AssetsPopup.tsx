@@ -92,7 +92,7 @@ const AssetsPopup = forwardRef<AssetsPopupControll, Props>(({
 
 const mainStyle = css({
   display: 'flex',
-  height: 500,
+  minHeight: 500,
   gap: 10
 })
 

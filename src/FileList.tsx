@@ -151,7 +151,7 @@ const ImageList: FC<Props> = ({
             )}
           >
             <PhotoView src={material.fileUrl}>
-              <div>预览</div>
+              <div style={{ display: 'inline-block' }}>预览</div>
             </PhotoView>
           </PhotoProvider>
         </Menu.Item>

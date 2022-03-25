@@ -220,6 +220,7 @@ const ImageList: FC<Props> = ({
                   size="small"
                   onChange={changePage}
                   pageSizeOptions={['8', '12', '16', '20', '24', '28', '36', '80', '120']}
+                  showSizeChanger
                 />
               )}
             </div>

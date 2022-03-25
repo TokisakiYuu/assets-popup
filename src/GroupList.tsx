@@ -136,7 +136,7 @@ const GroupList: FC<Props> = ({
       >
         <Input
           placeholder="请输入分组名称"
-          maxLength={8}
+          maxLength={20}
           value={state.newGroupName}
           onChange={event => setState({ newGroupName: event.target.value })}
         />

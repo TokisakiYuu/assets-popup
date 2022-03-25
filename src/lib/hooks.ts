@@ -101,7 +101,7 @@ export interface Material {
   fileName: string
   fileUrl: string
   materialGroupNo: string
-  mimeType: string
+  mimeType: string | null
 }
 
 /**

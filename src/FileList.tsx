@@ -142,7 +142,7 @@ const ImageList: FC<Props> = ({
       <Menu.Item key="delete" icon={<DeleteOutlined />}>删除</Menu.Item>
       <Menu.Item key="move" icon={<NodeIndexOutlined />}>移动</Menu.Item>
       <Menu.Item key="download" icon={<DownloadOutlined />}>下载</Menu.Item>
-      {material.mimeType.startsWith('image/') && (
+      {material.mimeType && material.mimeType.startsWith('image/') && (
         <Menu.Item key="preview" icon={<EyeOutlined />}>
           <PhotoProvider
             maskOpacity={0.5}
@@ -174,7 +174,7 @@ const ImageList: FC<Props> = ({
           className={cx(fileStyle, { 'selected': selectedKeys.includes(material.fileKey) })}
         >
           <div
-            className={cx({ [fileDisable]: fileSigns.length ? !fileSigns.includes(material.mimeType) && !fileSigns.includes(fileExtension(material.fileName)) : false })}
+            className={cx({ [fileDisable]: fileSigns.length ? !fileSigns.includes(material.mimeType || '') && !fileSigns.includes(fileExtension(material.fileName)) : false })}
             title={material.fileName}
             onClick={() => onClickItem(material)}
           >

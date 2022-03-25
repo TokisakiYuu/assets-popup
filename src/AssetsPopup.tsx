@@ -70,7 +70,7 @@ const AssetsPopup = forwardRef<AssetsPopupControll, Props>(({
             groupNo={currentGroupNo}
             onClickItem={item => {
               if (fileSigns.length) {
-                if (!fileSigns.includes(item.mimeType) && !fileSigns.includes(fileExtension(item.fileName))) return
+                if (!fileSigns.includes(item.mimeType || "") && !fileSigns.includes(fileExtension(item.fileName))) return
               }
               if (selectedItems.includes(item)) {
                 // 取消选中

@@ -2,7 +2,7 @@ import React, { FC, useEffect } from 'react'
 import { css, cx } from '@emotion/css'
 import { useGetGroupList, useCreateGroup, useDeleteGroup, useUpdateGroup } from './lib/hooks'
 import { useCtx } from './context'
-import { Skeleton, Button, Modal, Input, Dropdown, Menu } from 'antd'
+import { Skeleton, Button, Modal, Input, Dropdown, Menu, message } from 'antd'
 import { FolderAddTwoTone } from '@ant-design/icons'
 import { useSetState } from 'react-use'
 
@@ -59,6 +59,7 @@ const GroupList: FC<Props> = ({
       groupName: state.newGroupName,
       groupNo: state.editingGroup
     })
+    message.success('修改成功')
     setState({ newGroupModalVisible: false, newGroupName: '', editingGroup: '' })
     refresh()
   }

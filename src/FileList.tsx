@@ -242,10 +242,7 @@ const ImageList: FC<Props> = ({
         onOk={handleMoveMaterial}
       >
         <Select
-          onChange={value => {
-            console.log('select value', value)
-            setState({ targetGroup: value })
-          }}
+          onChange={value => setState({ targetGroup: value })}
           style={{ width: 300 }}
           value={state.targetGroup}
         >

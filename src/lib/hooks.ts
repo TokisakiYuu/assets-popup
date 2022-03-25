@@ -186,9 +186,14 @@ interface DeleteGroupData {
  */
 export function useUpdateGroup() {
   const ai = useAxiosInstance()
-  return async function(data: UpdateGroupData) {
-    const res = await ai.post('/authority/material/saveGroup', data)
-    return res.data?.info
+  return async function(params: UpdateGroupData) {
+    const res = await ai.post('/authority/material/saveGroup', params)
+    const { data } = res
+    if (data.code !== 10000) {
+      message.error(data.msg)
+      throw new Error(data.msg)
+    }
+    return data.info
   }
 }
 

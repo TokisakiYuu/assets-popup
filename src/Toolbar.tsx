@@ -255,7 +255,7 @@ const LocalUploadModal: FC<UploadModalProps> = ({
 
   return (
     <Modal
-      title={`上传本地文件到${group ? group.groupName : '默认分组'}`}
+      title={`上传文件到"${group ? group.groupName : '默认分组'}"`}
       visible={visible}
       onCancel={onCancel}
       maskClosable={false}

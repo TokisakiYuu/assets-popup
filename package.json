@@ -1,6 +1,6 @@
 {
   "name": "assets-popup",
-  "version": "2.0.7",
+  "version": "2.0.7-patch",
   "author": "TokisakiYuu <tokisakiyuu@qq.com>",
   "description": "素材箱",
   "displayName": "assets-popup",
@@ -32,7 +32,8 @@
     "watch": "tsc --watch -p tsconfig.es.json",
     "test": "jest",
     "test:watch": "jest --watch",
-    "format": "prettier --write src/**/*.* package.json"
+    "format": "prettier --write src/**/*.* package.json",
+    "prepublish": "npm run build"
   },
   "peerDependencies": {
     "antd": ">= 3.12.1"

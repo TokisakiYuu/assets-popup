@@ -292,10 +292,16 @@ const LocalFileInput: FC<CustomFormItemProps<RcFile[]>> = ({ value = [], onChang
   }
 
   const downloadSource = async () => {
-    const tasks = state.linkListContent.split('\n').map(item => ({
-      link: item,
-      successed: false
-    }))
+    const tasks = state.linkListContent
+      .split('\n')
+      .filter(item => !!item)
+      .map(item => ({
+        link: item.trim(),
+        successed: false
+      }))
+    if (!tasks.length) {
+      return message.warn('未输入链接')
+    }
     const files: File[] = []
     setState({ linkSourceDownloading: true })
     for (const task of tasks) {

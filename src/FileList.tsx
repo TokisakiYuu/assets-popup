@@ -123,13 +123,17 @@ const ImageList: FC<Props> = ({
 
   const handleMoveMaterial = async () => {
     if (!state.currentMaterial) return
+    if (!state.targetGroup) {
+      message.warn('未选择目标分组')
+      throw new Error('未选择目标分组')
+    }
     await moveMaterial({
       fileKeyList: [state.currentMaterial.fileKey],
       materialGroupNo: state.targetGroup
     })
     refreshAsync()
     ctx.refreshGroupList()
-    setState({ moveMaterialModalVisible: false, currentMaterial: null, targetGroup: '' })
+    setState({ moveMaterialModalVisible: false, currentMaterial: null })
     message.success('移动成功')
   }
 
@@ -229,16 +233,20 @@ const ImageList: FC<Props> = ({
       }
       <Modal
         visible={state.moveMaterialModalVisible}
-        title="移动"
+        title="移动至"
         maskClosable={false}
         okText="确认"
         cancelText="取消"
-        onCancel={() => setState({ moveMaterialModalVisible: false, targetGroup: '' })}
+        onCancel={() => setState({ moveMaterialModalVisible: false })}
         onOk={handleMoveMaterial}
       >
         <Select
-          onChange={value => setState({ targetGroup: value as string })}
+          onChange={value => {
+            console.log('select value', value)
+            setState({ targetGroup: value })
+          }}
           style={{ width: 300 }}
+          value={state.targetGroup}
         >
           {groups.filter(gp => gp.groupNo !== groupNo).map((gp, index: number) => (
             <Select.Option

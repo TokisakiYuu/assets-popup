@@ -2,6 +2,9 @@ import { useTokenRequest, useAxiosInstance } from './api'
 import { message } from 'antd'
 import { useRequest } from 'ahooks'
 import { useEffect, useState } from 'react'
+import { md5 } from '../utils'
+import mime from 'mime/lite'
+import contentDisposition from 'content-disposition'
 
 /**
  * 获取分组列表
@@ -109,13 +112,30 @@ export interface Material {
  */
 export function useDownloadFile() {
   const ai = useAxiosInstance()
-  return function(url: string) {
-    return ai.get('/authority/material/download', {
-      params: {
-        url: encodeURIComponent(url)
-      },
+  return async function(url: string) {
+    const res = await ai.get(`/authority/material/download?url=${encodeURIComponent(url)}`, {
       responseType: 'blob'
     })
+    const mimeType = res.headers['content-type']
+    if (!mimeType) {
+      throw new Error('未知文件类型')
+    }
+    if (mimeType === 'application/json') {
+      throw new Error(res.data.msg)
+    }
+    const blob: Blob = res.data
+    // 通过content-disposition获取文件名
+    if (res.headers['content-disposition']) {
+      const cd = contentDisposition.parse(res.headers['content-disposition'])
+      const filename = cd.parameters.filename
+      if (filename) {
+        return new File([blob], filename, { type: mimeType })
+      }
+    }
+    // 生成md5作为文件名，mime-db查询出拓展名
+    const ext = mime.getExtension(mimeType)
+    const filename = `${await md5(blob)}${ext ? `.${ext}` : ''}`
+    return new File([blob], filename, { type: mimeType })
   }
 }
 

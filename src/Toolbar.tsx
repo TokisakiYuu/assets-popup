@@ -6,7 +6,7 @@ import { css } from '@emotion/css'
 import { useCtx } from './context'
 import { GroupSource } from './GroupList'
 import { useGetQiNiuToken, useAddMaterial, useDownloadFile, useGetCompressionConfig } from './lib/hooks'
-import hasha from 'hasha'
+import { md5 } from './utils'
 import imageCompression from 'browser-image-compression'
 const qiniu = require('qiniu-js')
 import { message as antdMessage } from 'antd'
@@ -31,9 +31,8 @@ const Toolbar: FC<Props> = ({ group }) => {
   const config = useGetCompressionConfig()
 
   const uploadFile = async (file: File) => {
-    const buffer = await file.arrayBuffer()
-    const fileHash = hasha(Buffer.from(buffer), { algorithm: 'md5' })
-    const fileUploadHash = hasha(fileHash + Math.random() + Date.now(), { algorithm: 'md5' })
+    const fileHash = await md5(file)
+    const fileUploadHash = await md5(fileHash + Math.random() + Date.now())
     return new Promise((resolve, reject) => {
       const filename = `${config.prefix}/${fileUploadHash}`
       const observable = qiniu.upload(
@@ -306,17 +305,15 @@ const LocalFileInput: FC<CustomFormItemProps<RcFile[]>> = ({ value = [], onChang
     setState({ linkSourceDownloading: true })
     for (const task of tasks) {
       try {
-        const res = await downloadFile(task.link)
-        if (res.statusText === 'OK') {
-          const blob: Blob = res.data
-          const mimeType = res.headers['content-type'] || res.headers['Content-Type']
-          const filename = hasha(Buffer.from(await blob.arrayBuffer()), { algorithm: 'md5' })
-          const file = new File([blob], filename, { type: mimeType })
-          files.push(file)
-          task.successed = true
-        }
+        const file = await downloadFile(task.link)
+        files.push(file)
+        task.successed = true
       } catch (error) {
-        message.error(`从${task.link}`)
+        if (error instanceof Error) {
+          message.error(error.message)
+        } else {
+          message.error(`从 ${task.link} 下载失败`)
+        }
       }
       await sleep(300)
       setState({ linkListContent: tasks.filter(task => !task.successed).map(task => task.link).join('\n') })

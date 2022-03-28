@@ -82,7 +82,10 @@ const AssetsPopup = forwardRef<AssetsPopupControll, Props>(({
                 selectedItemsRef.filter(selectedItem => selectedItem !== item)
               } else {
                 // 选中
-                if (multiple || (!multiple && selectedItems.length < 1)) {
+                // 如果是单选，那么只能选一个
+                if (!multiple) {
+                  selectedItemsRef.set([item])
+                } else {
                   selectedItemsRef.push(item)
                 }
               }

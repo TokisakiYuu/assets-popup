@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState, forwardRef } from 'react'
-import { Modal } from 'antd'
+import { Modal, Typography } from 'antd'
 import { useList } from 'react-use'
 import { css } from '@emotion/css'
 import Toolbar from './Toolbar'
@@ -8,6 +8,7 @@ import FileList from './FileList'
 import Context from './context'
 import { Material } from './lib/hooks'
 import { fileExtension } from './utils'
+import mime from 'mime'
 
 interface Props {
   token: string
@@ -32,6 +33,9 @@ const AssetsPopup = forwardRef<AssetsPopupControll, Props>(({
   const currentGroupNo = currentGroup?.groupNo || ''
   // 如果文件的mimeType或者后缀名出现在这个列表中，那么文件就不可选
   const fileSigns = accept ? accept.split(',').map(sign => sign.trim()) : []
+  const acceptExtensions = fileSigns
+    .map(sign => sign.startsWith('.') ? sign : mime.getExtension(sign))
+    .filter(ext => !!ext)
 
   useEffect(() => {
     selectedItemsRef.clear()
@@ -60,6 +64,7 @@ const AssetsPopup = forwardRef<AssetsPopupControll, Props>(({
         onOk={() => onSelect(selectedItems)}
       >
         <Toolbar group={currentGroup} />
+        <p className={extTipStyle}>当前只能选择{acceptExtensions.join('、')}格式的文件</p>
         <div className={mainStyle}>
           <GroupList
             active={currentGroupNo}
@@ -94,6 +99,11 @@ const mainStyle = css({
   display: 'flex',
   minHeight: 500,
   gap: 10
+})
+
+const extTipStyle = css({
+  fontSize: 12,
+  color: '#999'
 })
 
 export interface AssetsPopupControll {

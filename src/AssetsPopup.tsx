@@ -33,9 +33,9 @@ const AssetsPopup = forwardRef<AssetsPopupControll, Props>(({
   const currentGroupNo = currentGroup?.groupNo || ''
   // 如果文件的mimeType或者后缀名出现在这个列表中，那么文件就不可选
   const fileSigns = accept ? accept.split(',').map(sign => sign.trim()) : []
-  const acceptExtensions = fileSigns
-    .map(sign => sign.startsWith('.') ? sign : mime.getExtension(sign))
-    .filter(ext => !!ext)
+  const acceptExtensions: string[] = fileSigns
+    .map(sign => sign.startsWith('.') ? sign.substring(1) : mime.getExtension(sign) || '')
+    .filter(ext => ext !== null)
 
   useEffect(() => {
     selectedItemsRef.clear()

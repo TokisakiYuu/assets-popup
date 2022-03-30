@@ -1,21 +1,34 @@
-import React, { FC, PropsWithChildren, useEffect, useState } from 'react'
-import { Button, Input, Modal, Upload, Form, Dropdown, Menu, Switch, Select, Slider, Spin, message } from 'antd'
+import React, { FC, useEffect } from 'react'
+import { Button, Input, Modal, Upload, Form, Switch, Select, Slider, Spin, message, Result } from 'antd'
 import { RcFile } from 'antd/lib/upload'
-import { useList, useSetState } from 'react-use'
+import { useRequest } from 'ahooks'
+import { useSetState } from 'react-use'
 import { css } from '@emotion/css'
 import { useCtx } from './context'
 import { GroupSource } from './GroupList'
-import { useGetQiNiuToken, useAddMaterial, useDownloadFile, useGetCompressionConfig } from './lib/hooks'
+import { useAxiosInstance } from './lib/api'
+import { useGetQiNiuToken, useAddMaterial, useDownloadFile } from './lib/hooks'
 import { md5 } from './utils'
 import imageCompression from 'browser-image-compression'
 const qiniu = require('qiniu-js')
 import { message as antdMessage } from 'antd'
+import { atom, useRecoilState, useRecoilValue } from 'recoil'
+import { CompressionConfig } from './store'
 
 const { Item } = Form
 
 interface Props {
   group: GroupSource | null
 }
+
+const globalConfig = atom<CompressionConfig>({
+  key: 'globalConfig',
+  default: {
+    enabled: false,
+    prefix: '',
+    config: {}
+  }
+})
 
 const Toolbar: FC<Props> = ({ group }) => {
   const ctx = useCtx()
@@ -28,7 +41,7 @@ const Toolbar: FC<Props> = ({ group }) => {
   })
   const qiniuToken = useGetQiNiuToken()
   const addMaterial = useAddMaterial()
-  const config = useGetCompressionConfig()
+  const config = useRecoilValue(globalConfig)
 
   const uploadFile = async (file: File) => {
     const fileHash = await md5(file)
@@ -167,7 +180,26 @@ const LocalUploadModal: FC<UploadModalProps> = ({
   message
 }) => {
   const [form] = Form.useForm<LocalUploadFormData>()
-  const config = useGetCompressionConfig()
+  const [config, setConfig] = useRecoilState(globalConfig)
+  const axios = useAxiosInstance()
+  const { run: loadConfig } = useRequest(() => 
+    axios.get(
+      '/authority/material/getCompressionConfig'
+    ).then(res => {
+      if (res.data.code === 10000) {
+        setConfig(res.data.info)
+        return res.data.info
+      }
+      throw new Error(res.data.msg)
+    }),
+    { manual: true }
+  )
+
+  useEffect(() => {
+    if (visible) {
+      loadConfig()
+    }
+  }, [visible])
 
   useEffect(() => {
     if (visible) {

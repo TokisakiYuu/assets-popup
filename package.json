@@ -1,6 +1,6 @@
 {
   "name": "assets-popup",
-  "version": "2.0.9",
+  "version": "2.0.9-hotfix.1",
   "author": "TokisakiYuu <tokisakiyuu@qq.com>",
   "description": "素材箱",
   "displayName": "assets-popup",
@@ -77,6 +77,7 @@
     "qiniu-js": "^3.4.0",
     "react-photo-view": "^1.0.0",
     "react-use": "^17.3.2",
+    "recoil": "^0.6.1",
     "spark-md5": "^3.0.2"
   }
 }

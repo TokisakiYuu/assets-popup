@@ -140,26 +140,6 @@ export function useDownloadFile() {
 }
 
 /**
- * 获取压缩配置
- */
-
-export function useGetCompressionConfig() {
-  const ai = useAxiosInstance()
-  const [ config, setConfig ] = useState<any>({})
-
-  useEffect(() => {
-    ai.get('/authority/material/getCompressionConfig')
-      .then(res => {
-        if (res.statusText === 'OK') {
-          setConfig(res.data?.info)
-        }
-      })
-  }, [])
-
-  return config
-}
-
-/**
  * 创建素材分组
  */
 export function useCreateGroup() {

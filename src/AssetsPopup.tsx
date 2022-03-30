@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState, forwardRef } from 'react'
-import { Modal, Typography } from 'antd'
+import { Modal } from 'antd'
 import { useList } from 'react-use'
 import { css } from '@emotion/css'
 import Toolbar from './Toolbar'
@@ -9,6 +9,7 @@ import Context from './context'
 import { Material } from './lib/hooks'
 import { fileExtension } from './utils'
 import mime from 'mime'
+import { RecoilRoot } from 'recoil'
 
 interface Props {
   token: string
@@ -113,4 +114,10 @@ export interface AssetsPopupControll {
 
 }
 
-export default AssetsPopup
+export default function AssetsPopupWithRecoil(props: Props) {
+  return (
+    <RecoilRoot>
+      <AssetsPopup {...props} />
+    </RecoilRoot>
+  )
+}

@@ -4,6 +4,7 @@ import Toolbar from './Toolbar'
 import GroupList, { GroupSource } from './GroupList'
 import FileList from './FileList'
 import Context from './context'
+import { RecoilRoot } from 'recoil'
 
 interface Props {
   token: string
@@ -51,4 +52,10 @@ export interface AssetsPopupControll {
 
 }
 
-export default ManagerPage
+export default function ManagerPageWithRecoil(props: Props) {
+  return (
+    <RecoilRoot>
+      <ManagerPage {...props} />
+    </RecoilRoot>
+  )
+}

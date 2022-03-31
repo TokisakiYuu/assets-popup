@@ -2,14 +2,17 @@ import React, { FC, useEffect, useState, forwardRef } from 'react'
 import { Modal } from 'antd'
 import { useList } from 'react-use'
 import { css } from '@emotion/css'
+import { useRequest } from 'ahooks'
 import Toolbar from './Toolbar'
 import GroupList, { GroupSource } from './GroupList'
 import FileList from './FileList'
 import Context from './context'
+import { useAxiosInstance } from './lib/api'
 import { Material } from './lib/hooks'
 import { fileExtension } from './utils'
 import mime from 'mime'
-import { RecoilRoot } from 'recoil'
+import { RecoilRoot, useRecoilState, useSetRecoilState } from 'recoil'
+import { popupVisibleAtom, useLocalFileAtom, multipleAtom, globalConfig, acceptAtom } from './store'
 
 interface Props {
   token: string
@@ -29,6 +32,10 @@ const AssetsPopup = forwardRef<AssetsPopupControll, Props>(({
   multiple,
   accept
 }, ref) => {
+  const setPopupVisible = useSetRecoilState(popupVisibleAtom)
+  const [useLocalFile, setUseLocalFile] = useRecoilState(useLocalFileAtom)
+  const setMultipleState = useSetRecoilState(multipleAtom)
+  const setAcceptState = useSetRecoilState(acceptAtom)
   const [selectedItems, selectedItemsRef] = useList<Material>([])
   const [currentGroup, setCurrentGroup] = useState<GroupSource | null>(null)
   const currentGroupNo = currentGroup?.groupNo || ''
@@ -41,6 +48,49 @@ const AssetsPopup = forwardRef<AssetsPopupControll, Props>(({
   useEffect(() => {
     selectedItemsRef.clear()
   }, [currentGroup])
+
+  useEffect(() => {
+    setPopupVisible(visible)
+  }, [visible])
+
+  useEffect(() => {
+    setMultipleState(multiple || false)
+  }, [multiple])
+
+  useEffect(() => {
+    setAcceptState(accept)
+  }, [accept])
+
+  // 如果用户选择了直接使用本地文件，那么这里面就会有Material对象
+  useEffect(() => {
+    if (useLocalFile.length) {
+      onSelect(useLocalFile)
+      setPopupVisible(false)
+      setUseLocalFile([])
+    }
+  }, [useLocalFile])
+
+  const setConfig = useSetRecoilState(globalConfig)
+  const axios = useAxiosInstance()
+  const { run: loadConfig } = useRequest(() => 
+    axios.get(
+      '/authority/material/getCompressionConfig',
+      { headers: { sdnxRequestId: token } }
+    ).then(res => {
+      if (res.data.code === 10000) {
+        setConfig(res.data.info)
+        return res.data.info
+      }
+      throw new Error(res.data.msg)
+    }),
+    { manual: true }
+  )
+
+  useEffect(() => {
+    if (visible) {
+      loadConfig()
+    }
+  }, [visible])
 
   return (
     <Context.Provider

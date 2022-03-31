@@ -1,4 +1,4 @@
-import React, { FC, useEffect } from 'react'
+import React, { FC, useEffect, useRef } from 'react'
 import { Button, Input, Modal, Upload, Form, Switch, Select, Slider, Spin, message, Result } from 'antd'
 import { RcFile } from 'antd/lib/upload'
 import { useRequest } from 'ahooks'
@@ -7,13 +7,13 @@ import { css } from '@emotion/css'
 import { useCtx } from './context'
 import { GroupSource } from './GroupList'
 import { useAxiosInstance } from './lib/api'
-import { useGetQiNiuToken, useAddMaterial, useDownloadFile } from './lib/hooks'
+import { useGetQiNiuToken, useAddMaterial, useDownloadFile, Material } from './lib/hooks'
 import { md5 } from './utils'
 import imageCompression from 'browser-image-compression'
 const qiniu = require('qiniu-js')
 import { message as antdMessage } from 'antd'
-import { atom, useRecoilState, useRecoilValue } from 'recoil'
-import { CompressionConfig } from './store'
+import { atom, useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { globalConfig, popupVisibleAtom, useLocalFileAtom, multipleAtom, acceptAtom } from './store'
 
 const { Item } = Form
 
@@ -21,19 +21,11 @@ interface Props {
   group: GroupSource | null
 }
 
-const globalConfig = atom<CompressionConfig>({
-  key: 'globalConfig',
-  default: {
-    enabled: false,
-    prefix: '',
-    config: {}
-  }
-})
-
 const Toolbar: FC<Props> = ({ group }) => {
   const ctx = useCtx()
   const [state, setState] = useSetState({
-    localUploadModalVisible: false
+    localUploadModalVisible: false,
+    useLocalFileUploading: false
   })
   const [localUploadState, setLocalUploadState] = useSetState({
     uploading: false,
@@ -42,6 +34,12 @@ const Toolbar: FC<Props> = ({ group }) => {
   const qiniuToken = useGetQiNiuToken()
   const addMaterial = useAddMaterial()
   const config = useRecoilValue(globalConfig)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const popupVisible = useRecoilValue(popupVisibleAtom)
+  const axios = useAxiosInstance()
+  const multiple = useRecoilValue(multipleAtom)
+  const accept = useRecoilValue(acceptAtom)
+  const setUseLocalFileAtom = useSetRecoilState(useLocalFileAtom)
 
   const uploadFile = async (file: File) => {
     const fileHash = await md5(file)
@@ -127,11 +125,66 @@ const Toolbar: FC<Props> = ({ group }) => {
     setLocalUploadState({ uploading: false })
   }
 
+  // 直接使用本地文件
+  const handleUseLocalFile = async (files: File[]) => {
+    setState({ useLocalFileUploading: true })
+    // 检查文件名长度
+    for (const file of files) {
+      if (file.name.length > 60) {
+        message.error('文件名长度不能超过60个字')
+        return
+      }
+    }
+    const uploadResults: any[] = []
+    for (const file of files) {
+      uploadResults.push({
+        file,
+        res: await uploadFile(file)
+      })
+    }
+    // 获取素材url
+    const getMaterialAccessUrlResponse = await axios.post('/authority/material/getMaterialAccessUrl', uploadResults.map(item => item.res.key))
+    if (getMaterialAccessUrlResponse.data.code !== 10000) {
+      throw new Error('获取素材url失败')
+    }
+    const { materialAccessList } = getMaterialAccessUrlResponse.data.info
+    const materials: Material[] = uploadResults.map(item => {
+      return {
+        fileKey: item.res.key,
+        fileName: item.file.name,
+        fileUrl: (materialAccessList as { fileKey: string, fileUrl: string }[]).find(material => material.fileKey === item.res.key)?.fileUrl || '',
+        materialGroupNo: group?.groupNo || '',
+        mimeType: item.file.type,
+      }
+    })
+    setState({ useLocalFileUploading: false })
+    setUseLocalFileAtom(materials)
+  }
+
   return (
     <div className={style}>
       <Button type="primary" onClick={() => setState({ localUploadModalVisible: true })}>
         上传文件
       </Button>
+      {popupVisible && (
+        <Button
+          title="文件不会被压缩且不会上传到你的素材箱中"
+          style={{ marginLeft: 10 }}
+          type="primary"
+          onClick={() => inputRef.current?.click()}
+          loading={state.useLocalFileUploading}
+        >
+          直接使用本地文件
+        </Button> 
+      )}
+      <input
+        type="file"
+        style={{ display: 'none' }} 
+        ref={inputRef}
+        multiple={multiple}
+        accept={accept}
+        onChange={event => handleUseLocalFile(Array.prototype.slice.call(event.target.files || []))}
+      />
       <LocalUploadModal
         group={group}
         visible={state.localUploadModalVisible}
@@ -180,26 +233,7 @@ const LocalUploadModal: FC<UploadModalProps> = ({
   message
 }) => {
   const [form] = Form.useForm<LocalUploadFormData>()
-  const [config, setConfig] = useRecoilState(globalConfig)
-  const axios = useAxiosInstance()
-  const { run: loadConfig } = useRequest(() => 
-    axios.get(
-      '/authority/material/getCompressionConfig'
-    ).then(res => {
-      if (res.data.code === 10000) {
-        setConfig(res.data.info)
-        return res.data.info
-      }
-      throw new Error(res.data.msg)
-    }),
-    { manual: true }
-  )
-
-  useEffect(() => {
-    if (visible) {
-      loadConfig()
-    }
-  }, [visible])
+  const config = useRecoilValue(globalConfig)
 
   useEffect(() => {
     if (visible) {

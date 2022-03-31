@@ -1,21 +1,5 @@
 import { atom, selector } from 'recoil'
-import { Material } from '../lib/hooks'
-
-export interface GroupSource {
-  groupNo: string
-  groupName: string,
-  materialCount: number
-}
-
-export const selectedItems = atom<Material[]>({
-  key: 'selectedItems',
-  default: [],
-})
-
-export const currentGroup = atom<GroupSource | null>({
-  key: 'currentGroup',
-  default: null,
-})
+import { Material } from 'src/lib/hooks'
 
 /** 全局压缩配置 */
 export interface CompressionConfig {
@@ -34,4 +18,48 @@ export const compressionConfig = atom<CompressionConfig>({
     prefix: '',
     config: {},
   }
+})
+
+/**
+ * 弹窗显示状态
+ */
+export const popupVisibleAtom = atom<boolean>({
+  key: 'popupVisible',
+  default: false,
+})
+
+/**
+ * 用户选择直接使用本地文件时选中的文件
+ */
+export const useLocalFileAtom = atom<Material[]>({
+  key: 'useLocalFile',
+  default: []
+})
+
+/**
+ * 是否多选
+ */
+export const multipleAtom = atom<boolean>({
+  key: 'multiple',
+  default: false
+})
+
+/**
+ * 全局配置，需要请求后更新进来
+ */
+export const globalConfig = atom<CompressionConfig>({
+  key: 'globalConfig',
+  default: {
+    enabled: false,
+    prefix: '',
+    config: {}
+  }
+})
+
+/**
+ * 当前素材箱可选择的文件格式，同input:file 的accept属性
+ */
+export const acceptAtom = atom<string | undefined>({
+  key: 'accept',
+  default: undefined
 })

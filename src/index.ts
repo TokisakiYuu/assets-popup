@@ -6,5 +6,3 @@ export { AssetsPopupControll } from './AssetsPopup'
 
 export default AssetsPopup
 export { SettingPage, ManagerPage }
-
-// TODO 在适当的位置增加当前可选格式的提示

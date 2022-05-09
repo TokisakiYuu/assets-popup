@@ -72,7 +72,7 @@ const Toolbar: FC<Props> = ({ group }) => {
   // 本地文件上传
   const handleLocalUpload = async (data: LocalUploadFormData) => {
     setLocalUploadState({ uploading: true })
-    const { enableImageCompress, compressionRatio } = data
+    const { enabled, config } = data
     // 检查文件名长度
     for (const file of data.files) {
       if (file.name.length > 60) {
@@ -82,7 +82,8 @@ const Toolbar: FC<Props> = ({ group }) => {
       }
     }
     // 压缩
-    if (enableImageCompress && compressionRatio) {
+    const compressionRatio = config.ratio
+    if (enabled === 0 && compressionRatio) {                // 没错，等于0才是开启，后端定义的
       setLocalUploadState({ message: '正在压缩图片' })
       data.files = await Promise.all(data.files.map(async file => {
         if (['image/png', 'image/jpeg'].includes(file.type)) {
@@ -219,8 +220,10 @@ interface UploadModalProps {
 
 interface LocalUploadFormData {
   files: File[]
-  enableImageCompress: boolean
-  compressionRatio?: number
+  enabled: 0 | 1
+  config: {
+    ratio?: number
+  },
   materialType: number
 }
 
@@ -238,7 +241,8 @@ const LocalUploadModal: FC<UploadModalProps> = ({
   useEffect(() => {
     if (visible) {
       form.setFieldsValue({
-        ...config,
+        enabled: config.enabled ? 1 : 0,
+        config: config.config,
         materialType: 0
       })
     }

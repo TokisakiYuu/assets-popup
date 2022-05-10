@@ -8,7 +8,7 @@ import { useCtx } from './context'
 import { GroupSource } from './GroupList'
 import { useAxiosInstance } from './lib/api'
 import { useGetQiNiuToken, useAddMaterial, useDownloadFile, Material } from './lib/hooks'
-import { md5 } from './utils'
+import { md5, fileExtension } from './utils'
 import imageCompression from 'browser-image-compression'
 const qiniu = require('qiniu-js')
 import { message as antdMessage } from 'antd'
@@ -45,7 +45,7 @@ const Toolbar: FC<Props> = ({ group }) => {
     const fileHash = await md5(file)
     const fileUploadHash = await md5(fileHash + Math.random() + Date.now())
     return new Promise((resolve, reject) => {
-      const filename = `${config.prefix}/${fileUploadHash}`
+      const filename = `${config.prefix}/${fileUploadHash}${fileExtension(file.name)}`
       const observable = qiniu.upload(
         file,
         filename,
